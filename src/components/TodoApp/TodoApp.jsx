@@ -7,14 +7,13 @@ const TodoApp = () => {
   const [value, setValue] = useState(false);
   const [clear, setClear] = useState(false);
   const [data, setData] = useState([]);
-  const [status, setStatus] = useState(0)
+  const [status, setStatus] = useState('text');
 
-
-useEffect(() => {
-  const getItemFromLocalStorage = localStorage.getItem("todo_app");
-  const parsedData = JSON.parse(getItemFromLocalStorage);
-  setData(parsedData)
-},[status])
+  useEffect(() => {
+    const getItemFromLocalStorage = localStorage.getItem("todo_app");
+    const parsedData = JSON.parse(getItemFromLocalStorage);
+    setData(parsedData);
+  }, [status]);
 
   const todoValue = useRef();
 
@@ -34,7 +33,7 @@ useEffect(() => {
   }
   const handleAddTodo = () => {
     if (todoValue.current.value) {
-      toast.success("value found!");
+      toast.success("Task Added!");
       const _id = [...Array(5)]
         .map(() => Math.floor(Math.random() * 10))
         .join("");
@@ -58,33 +57,50 @@ useEffect(() => {
         todo_date: formattedDate,
         todo_time: currentTime,
       };
-      
-      // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      // Get the existing data from localStorage
       const todoApp = JSON.parse(localStorage.getItem("todo_app")) || [];
 
       const newObjectToStore = [...todoApp, todoObject];
 
-      setData(newObjectToStore)
+      setData(newObjectToStore);
 
       const stringifyBeforeStoring = JSON.stringify(newObjectToStore);
 
       localStorage.setItem("todo_app", stringifyBeforeStoring);
+
+      todoValue.current.value = ''
+      setClear(true)
     }
-    toast.success("Product has been added");
   };
 
-  console.log(data)
+  const handleDeleteTasks = (_id) => {
+    const todoTasks = JSON.parse(localStorage.getItem("todo_app"));
+
+    const indexToDelete = todoTasks.findIndex((task) => task._id === _id);
+
+    if (indexToDelete !== -1) {
+      todoTasks.splice(indexToDelete, 1);
+
+      localStorage.setItem("todo_app", JSON.stringify(todoTasks));
+      toast.success("Task Deleted")
+
+      setStatus(_id)
+    } else {
+      console.log(`Item with _id ${_id} not found.`);
+    }
+  };
+  //
+
+
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex flex-col w-full items-center justify-center">
       {/* todo card */}
       <div>
-        <div className="w-[500px] h-[700px] bg-gray-200 p-6 m-6 rounded-xl">
+        <div className="md:w-[500px] w-full h-[700px] bg-gray-200 md:p-6 p-3 md:m-6 m-0 my-4 rounded-xl">
           <h1 className="text-2xl font-bold">Todo app</h1>
           {/* input */}
           <div className="flex items-center">
-            <div className="my-4 w-full bg-white rounded-full ps-4 pe-2 py-2 flex items-center justify-between">
+            <div className="my-4 w-full bg-white rounded-full px-2 py-2 flex items-center justify-between">
               <input
                 onChange={handleTodo}
                 id="todo"
@@ -92,7 +108,7 @@ useEffect(() => {
                 name="todo"
                 type="text"
                 placeholder="Enter Your Task"
-                className="bg-transparent w-full focus:outline-none"
+                className="bg-transparent px-2 w-full focus:outline-none"
               />
 
               <div className="hover:bg-slate-600 p-1 rounded-full duration-300 ">
@@ -117,14 +133,20 @@ useEffect(() => {
               Add
             </button>
           </div>
-          <div className=" bg-white rounded-xl flex flex-col overflow-y-auto gap-3 scrollbar pt-3 ps-3 pb-3 pe-3 h-[540px]">
+          <div className=" bg-img rounded-xl flex flex-col overflow-y-auto gap-3 scrollbar pt-3 ps-3 pb-3 pe-3 h-[540px]">
             {/* todo Card */}
-            {
-              data?.map(task => <TodoCard setStatus={setStatus} key={task._id} task={task} />)
-            }
+            {data?.map((task) => (
+              <TodoCard
+                handleDeleteTasks={handleDeleteTasks}
+                setStatus={setStatus}
+                key={task._id}
+                task={task}
+              />
+            ))}
           </div>
         </div>
       </div>
+      <span className="text-sm font-semibold mb-6 text-gray-600">@ Created By <a title="visit portfolio" className="hover:underline duration-300" href="https://cute-concha-6a1a1e.netlify.app/">Md Asik</a> For Daily Use.</span>
     </div>
   );
 };
