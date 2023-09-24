@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { AiOutlinePlusCircle } from "react-icons/ai";
 import TodoCard from "./TodoCard/TodoCard";
@@ -6,6 +6,16 @@ import TodoCard from "./TodoCard/TodoCard";
 const TodoApp = () => {
   const [value, setValue] = useState(false);
   const [clear, setClear] = useState(false);
+  const [data, setData] = useState([]);
+  const [status, setStatus] = useState(0)
+
+
+useEffect(() => {
+  const getItemFromLocalStorage = localStorage.getItem("todo_app");
+  const parsedData = JSON.parse(getItemFromLocalStorage);
+  setData(parsedData)
+},[status])
+
   const todoValue = useRef();
 
   const handleTodo = (e) => {
@@ -22,14 +32,50 @@ const TodoApp = () => {
     setClear(false);
     setValue(false);
   }
-  const handleClick = () => {
+  const handleAddTodo = () => {
     if (todoValue.current.value) {
-      return toast.success("value found!");
+      toast.success("value found!");
+      const _id = [...Array(5)]
+        .map(() => Math.floor(Math.random() * 10))
+        .join("");
+
+      const todo = todoValue.current.value;
+      const todoStatus = "pending";
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-based, so we add 1.
+      const year = currentDate.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+      const currentTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      const todoObject = {
+        _id: _id,
+        todo_task: todo,
+        todo_status: todoStatus,
+        todo_date: formattedDate,
+        todo_time: currentTime,
+      };
+      
+      // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      // Get the existing data from localStorage
+      const todoApp = JSON.parse(localStorage.getItem("todo_app")) || [];
+
+      const newObjectToStore = [...todoApp, todoObject];
+
+      setData(newObjectToStore)
+
+      const stringifyBeforeStoring = JSON.stringify(newObjectToStore);
+
+      localStorage.setItem("todo_app", stringifyBeforeStoring);
     }
-    return toast.error("no value found");
+    toast.success("Product has been added");
   };
 
-  
+  console.log(data)
   return (
     <div className="flex items-center justify-center">
       {/* todo card */}
@@ -65,7 +111,7 @@ const TodoApp = () => {
               </div>
             </div>
             <button
-              onClick={handleClick}
+              onClick={handleAddTodo}
               className={`text-sm ms-3 bg-green-500 h-full px-5 py-3 rounded-full active:bg-green-900 text-white font-semibold`}
             >
               Add
@@ -73,14 +119,9 @@ const TodoApp = () => {
           </div>
           <div className=" bg-white rounded-xl flex flex-col overflow-y-auto gap-3 scrollbar pt-3 ps-3 pb-3 pe-3 h-[540px]">
             {/* todo Card */}
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
-            <TodoCard />
+            {
+              data?.map(task => <TodoCard setStatus={setStatus} key={task._id} task={task} />)
+            }
           </div>
         </div>
       </div>
